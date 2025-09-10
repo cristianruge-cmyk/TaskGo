@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TaskGo — Tu organizador de tareas</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>TaskGo</h1>
+    <p class="subtitle">Organiza tus tareas y recibe recordatorios en el celular</p>
+  </header>
+
+  <main class="container">
+    <section class="form-section">
+      <form id="task-form">
+        <input id="title" type="text" placeholder="Título de la tarea" required />
+        <div class="row">
+          <input id="due" type="datetime-local" />
+          <select id="priority">
+            <option value="media">Media</option>
+            <option value="alta">Alta</option>
+            <option value="baja">Baja</option>
+          </select>
+        </div>
+        <div class="row">
+          <input id="category" type="text" placeholder="Categoría (opcional)" />
+          <label class="notify-label"><input id="notify" type="checkbox" /> Recordarme</label>
+        </div>
+
+        <div class="row actions">
+          <button id="save-btn" type="submit">Agregar tarea</button>
+          <button id="cancel-edit" type="button" class="hidden">Cancelar edición</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="tasks-section">
+      <h2>Mis tareas</h2>
+      <ul id="tasks-list" class="tasks-list"></ul>
+      <div class="footer-actions">
+        <button id="clear-completed">Eliminar completadas</button>
+        <button id="export-json">Exportar (.json)</button>
+        <input id="import-file" type="file" accept=".json" style="display:none" />
+        <button id="import-json">Importar (.json)</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>TaskGo — Proyecto universitario · Hecho con ❤️</small>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
