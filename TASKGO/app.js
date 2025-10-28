@@ -1,5 +1,6 @@
 // TaskGo - app.js (vanilla JS)
 // Guarda tareas en localStorage y maneja notificaciones locales (cuando la app está abierta o instalada como PWA).
+import { ThemeProvider } from "./context/ThemeContext";
 
 const STORAGE_KEY = 'taskgo_tasks_v1';
 let tasks = [];
