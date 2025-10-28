@@ -6,7 +6,8 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import PrivateRoute from "./components/PrivateRoute";
 import { Toaster } from "react-hot-toast";
-import { ThemeProvider } from "./context/ThemeContext";
+import { ThemeProvider } from "./context/ThemeContext.jsx";
+
 
 function App() {
   return (
