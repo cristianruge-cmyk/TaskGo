@@ -1,16 +1,17 @@
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState, useMemo } from "react";
+import confetti from "canvas-confetti";
+import toast from "react-hot-toast";
 
 export default function ProgressPanel({ tasks, total, completadas, pendientes, progress }) {
-  const [open, setOpen] = useState(false);
+  const [lastMedals, setLastMedals] = useState([]);
 
-  // 🔎 Agrupar tareas por día (fecha sin hora)
+  // 🔎 Agrupar tareas por día
   const tasksByDay = useMemo(() => {
     const map = {};
     tasks.forEach(t => {
       if (t.createdAt?.seconds) {
         const date = new Date(t.createdAt.seconds * 1000);
-        const key = date.toISOString().split("T")[0]; // YYYY-MM-DD
+        const key = date.toISOString().split("T")[0];
         map[key] = (map[key] || 0) + 1;
       }
     });
@@ -30,7 +31,7 @@ export default function ProgressPanel({ tasks, total, completadas, pendientes, p
     return { day: bestDay, count: max };
   }, [tasksByDay]);
 
-  // 🔥 Racha de superación (días consecutivos superando el récord anterior)
+  // 🔥 Racha de superación
   const streak = useMemo(() => {
     if (!recordDay.day) return 0;
     const sortedDays = Object.keys(tasksByDay).sort();
@@ -52,11 +53,11 @@ export default function ProgressPanel({ tasks, total, completadas, pendientes, p
     return maxStreak;
   }, [tasksByDay, recordDay]);
 
-  // 🥇 Medallas semanales (ejemplo simple)
-  const medals = useMemo(() => {
+  // 🥇 Medallas semanales
+  const weeklyMedal = useMemo(() => {
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay()); // domingo
+    startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
 
     const tasksThisWeek = tasks.filter(
@@ -65,80 +66,115 @@ export default function ProgressPanel({ tasks, total, completadas, pendientes, p
 
     const completedThisWeek = tasksThisWeek.filter(t => t.completed).length;
 
-    if (completedThisWeek >= 15) return "🥇 Oro";
-    if (completedThisWeek >= 10) return "🥈 Plata";
-    if (completedThisWeek >= 5) return "🥉 Bronce";
+    if (completedThisWeek >= 15) return "🥇 Oro semanal";
+    if (completedThisWeek >= 10) return "🥈 Plata semanal";
+    if (completedThisWeek >= 5) return "🥉 Bronce semanal";
     return null;
   }, [tasks]);
 
+  // 🏅 Logros adicionales
+  const extraMedals = useMemo(() => {
+    const medals = [];
+
+    if (completadas >= 5) medals.push("🥉 5 tareas completadas");
+    if (completadas >= 15) medals.push("🥈 15 tareas completadas");
+    if (completadas >= 30) medals.push("🥇 30 tareas completadas");
+
+    if (streak >= 3) medals.push("🔥 Racha de 3 días");
+    if (streak >= 7) medals.push("🔥 Racha de 7 días");
+    if (streak >= 30) medals.push("🔥 Racha de 30 días");
+
+    return medals;
+  }, [completadas, streak]);
+
+  // 🔔 Detectar nuevos logros y mostrar notificación + confeti
+  useEffect(() => {
+    const currentMedals = [
+      ...(weeklyMedal ? [weeklyMedal] : []),
+      ...extraMedals
+    ];
+
+    const newOnes = currentMedals.filter(m => !lastMedals.includes(m));
+    if (newOnes.length > 0) {
+      newOnes.forEach(m => {
+        toast.success(`🏅 ¡Nuevo logro desbloqueado!: ${m}`, {
+          duration: 4000,
+          position: "top-right"
+        });
+      });
+
+      confetti({
+        particleCount: 120,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      setLastMedals(currentMedals);
+    }
+  }, [weeklyMedal, extraMedals, lastMedals]);
+
   return (
-    <div className="w-full max-w-md mx-auto">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full px-4 py-2 bg-white text-blue-700 font-semibold rounded shadow hover:bg-blue-100 transition"
-      >
-        {open ? "Ocultar estadísticas" : "Tu progreso"}
-      </button>
+    <div className="space-y-4 text-gray-800 dark:text-gray-100">
+      {/* Resumen */}
+      <div>
+        <p><span className="font-semibold">Total:</span> {total} tareas</p>
+        <p><span className="font-semibold">Pendientes:</span> {pendientes}</p>
+        <p><span className="font-semibold">Completadas:</span> {completadas}</p>
+        <p><span className="font-semibold">{progress}%</span> completado</p>
+        <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-3 mt-2">
+          <div
+            className="bg-green-500 h-3 rounded-full transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="progress-panel"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="mt-4 bg-white/90 backdrop-blur rounded-lg p-4 shadow space-y-4 text-gray-800"
-          >
-            {/* Resumen */}
-            <div>
-              <p><span className="font-semibold">Total:</span> {total} tareas</p>
-              <p><span className="font-semibold">Pendientes:</span> {pendientes}</p>
-              <p><span className="font-semibold">Completadas:</span> {completadas}</p>
-              <p><span className="font-semibold">{progress}%</span> completado</p>
-              <div className="w-full bg-gray-300 rounded-full h-3 mt-2">
-                <div
-                  className="bg-green-500 h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Medallas */}
-            <div>
-              <h3 className="font-semibold">🏅 Medallas semanales</h3>
-              {medals ? (
-                <p className="text-sm text-gray-600">Has ganado: {medals}</p>
-              ) : (
-                <p className="text-sm text-gray-600">Aún no has ganado medallas esta semana.</p>
-              )}
-            </div>
-
-            {/* Récord personal */}
-            <div>
-              <h3 className="font-semibold">🏆 Récord personal</h3>
-              {recordDay.day ? (
-                <p className="text-sm text-gray-600">
-                  Tu mejor día fue {new Date(recordDay.day).toLocaleDateString("es-ES", {
-                    day: "numeric",
-                    month: "short"
-                  })} con {recordDay.count} tareas creadas.
-                </p>
-              ) : (
-                <p className="text-sm text-gray-600">Aún no tienes récord registrado.</p>
-              )}
-            </div>
-
-            {/* Racha */}
-            <div>
-              <h3 className="font-semibold">🔥 Racha de superación</h3>
-              <p className="text-sm text-gray-600">
-                Racha actual: {streak} días superando tu récord.
-              </p>
-            </div>
-          </motion.div>
+      {/* Medallas semanales */}
+      <div>
+        <h3 className="font-semibold">🏅 Medallas semanales</h3>
+        {weeklyMedal ? (
+          <p className="text-sm">Has ganado: {weeklyMedal}</p>
+        ) : (
+          <p className="text-sm">Aún no has ganado medallas esta semana.</p>
         )}
-      </AnimatePresence>
+      </div>
+
+      {/* Logros adicionales */}
+      <div>
+        <h3 className="font-semibold">🎖️ Logros</h3>
+        {extraMedals.length > 0 ? (
+          <ul className="list-disc pl-5 space-y-1 text-sm">
+            {extraMedals.map((m, i) => (
+              <li key={i}>{m}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm">Aún no has desbloqueado logros.</p>
+        )}
+      </div>
+
+      {/* Récord personal */}
+      <div>
+        <h3 className="font-semibold">🏆 Récord personal</h3>
+        {recordDay.day ? (
+          <p className="text-sm">
+            Tu mejor día fue {new Date(recordDay.day).toLocaleDateString("es-ES", {
+              day: "numeric",
+              month: "short"
+            })} con {recordDay.count} tareas creadas.
+          </p>
+        ) : (
+          <p className="text-sm">Aún no tienes récord registrado.</p>
+        )}
+      </div>
+
+      {/* Racha */}
+      <div>
+        <h3 className="font-semibold">🔥 Racha de superación</h3>
+        <p className="text-sm">
+          Racha actual: {streak} días superando tu récord.
+        </p>
+      </div>
     </div>
   );
 }

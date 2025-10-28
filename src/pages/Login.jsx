@@ -1,17 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { auth, db } from "../firebase";
 import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   sendPasswordResetEmail
 } from "firebase/auth";
-import {
-  doc,
-  getDoc,
-  setDoc
-} from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import taskgoLogo from "../assets/taskgo-logo.png";
 
 export default function Login() {
@@ -44,17 +42,38 @@ export default function Login() {
     }
   };
 
-  // 🔐 Login con Google
+  // 🔐 Login con Google (Popup con fallback a Redirect)
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+
     try {
       const result = await signInWithPopup(auth, provider);
       await ensureUserDoc(result.user);
       navigate("/dashboard");
     } catch (error) {
-      alert("Error: " + error.message);
+      console.warn("Popup falló, usando redirect:", error.message);
+      try {
+        await signInWithRedirect(auth, provider);
+      } catch (err) {
+        alert("Error en login con Google: " + err.message);
+      }
     }
   };
+
+  // 🔄 Manejar resultado de Redirect
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          await ensureUserDoc(result.user);
+          navigate("/dashboard");
+        }
+      })
+      .catch((error) => {
+        if (error) console.error("Error en redirect:", error.message);
+      });
+  }, [navigate]);
 
   // 🔐 Recuperar contraseña
   const handleResetPassword = async () => {
@@ -154,5 +173,3 @@ export default function Login() {
     </div>
   );
 }
-
-

@@ -1,6 +1,5 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { db, auth } from "../firebase";
-import confetti from "canvas-confetti";
 import {
   collection,
   query,
@@ -16,9 +15,7 @@ export default function TaskList() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("todas");
-  const [urgencyFilter, setUrgencyFilter] = useState("todas");
   const [deletingTaskId, setDeletingTaskId] = useState(null);
-  const hasCelebrated = useRef(false);
 
   const urgencyColor = {
     baja: "border-green-400",
@@ -26,7 +23,7 @@ export default function TaskList() {
     alta: "border-red-500"
   };
 
-  // 🔑 Escuchar tareas en tiempo real del usuario actual
+  // 🔑 Escuchar tareas en tiempo real
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
       if (user) {
@@ -43,22 +40,6 @@ export default function TaskList() {
           }));
           setTasks(tasksData);
           setLoading(false);
-
-          // 🎉 Confetti cuando todas están completadas
-          if (
-            tasksData.length > 0 &&
-            tasksData.every(t => t.completed) &&
-            !hasCelebrated.current
-          ) {
-            confetti({
-              particleCount: 150,
-              spread: 70,
-              origin: { y: 0.6 }
-            });
-            hasCelebrated.current = true;
-          } else if (tasksData.some(t => !t.completed)) {
-            hasCelebrated.current = false;
-          }
         });
 
         return () => unsubscribeTasks();
@@ -76,12 +57,6 @@ export default function TaskList() {
     try {
       const taskRef = doc(db, "tasks", taskId);
       await updateDoc(taskRef, { completed: true });
-
-      confetti({
-        particleCount: 100,
-        spread: 60,
-        origin: { y: 0.6 }
-      });
     } catch (error) {
       console.error("Error al marcar como completada:", error);
     }
@@ -103,53 +78,93 @@ export default function TaskList() {
     }, 300);
   };
 
-  // 🔑 Filtros
+  // 🔑 Nueva lógica de filtros
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
-      const estadoOk =
-        filter === "todas" ||
-        (filter === "pendientes" && !task.completed) ||
-        (filter === "completadas" && task.completed);
-
-      const urgenciaOk =
-        urgencyFilter === "todas" || task.urgency === urgencyFilter;
-
-      return estadoOk && urgenciaOk;
+      switch (filter) {
+        case "pendientes":
+          return !task.completed;
+        case "completadas":
+          return task.completed;
+        case "urgencia:baja":
+          return task.urgency === "baja";
+        case "urgencia:media":
+          return task.urgency === "media";
+        case "urgencia:alta":
+          return task.urgency === "alta";
+        default:
+          return true; // "todas"
+      }
     });
-  }, [tasks, filter, urgencyFilter]);
+  }, [tasks, filter]);
 
   if (loading) return <p className="text-white text-center mt-4">Cargando tareas...</p>;
 
   return (
     <div className="mt-6 w-full max-w-3xl space-y-4">
-      {/* Filtros por estado */}
-      <div className="flex flex-wrap gap-2">
-        {["todas", "pendientes", "completadas"].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-3 py-1 rounded text-sm font-semibold ${
-              filter === f ? "bg-white text-blue-700" : "bg-blue-300 text-white"
-            }`}
-          >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
-      </div>
 
-      {/* Filtros por urgencia */}
-      <div className="flex flex-wrap gap-2">
-        {["todas", "baja", "media", "alta"].map(u => (
-          <button
-            key={u}
-            onClick={() => setUrgencyFilter(u)}
-            className={`px-3 py-1 rounded text-sm font-semibold ${
-              urgencyFilter === u ? "bg-white text-blue-700" : "bg-blue-300 text-white"
-            }`}
-          >
-            {u === "todas" ? "Todas" : u.charAt(0).toUpperCase() + u.slice(1)}
-          </button>
-        ))}
+      {/* 🔹 Filtros */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <button
+          onClick={() => setFilter("todas")}
+          className={`px-4 py-1 rounded-full font-medium transition ${
+            filter === "todas"
+              ? "bg-blue-600 text-white"
+              : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+          }`}
+        >
+          Todas
+        </button>
+        <button
+          onClick={() => setFilter("pendientes")}
+          className={`px-4 py-1 rounded-full font-medium transition ${
+            filter === "pendientes"
+              ? "bg-yellow-500 text-white"
+              : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+          }`}
+        >
+          Pendientes
+        </button>
+        <button
+          onClick={() => setFilter("completadas")}
+          className={`px-4 py-1 rounded-full font-medium transition ${
+            filter === "completadas"
+              ? "bg-green-600 text-white"
+              : "bg-green-100 text-green-700 hover:bg-green-200"
+          }`}
+        >
+          Completadas
+        </button>
+        <button
+          onClick={() => setFilter("urgencia:baja")}
+          className={`px-4 py-1 rounded-full font-medium transition ${
+            filter === "urgencia:baja"
+              ? "bg-gray-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          Baja
+        </button>
+        <button
+          onClick={() => setFilter("urgencia:media")}
+          className={`px-4 py-1 rounded-full font-medium transition ${
+            filter === "urgencia:media"
+              ? "bg-orange-500 text-white"
+              : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+          }`}
+        >
+          Media
+        </button>
+        <button
+          onClick={() => setFilter("urgencia:alta")}
+          className={`px-4 py-1 rounded-full font-medium transition ${
+            filter === "urgencia:alta"
+              ? "bg-red-600 text-white"
+              : "bg-red-100 text-red-700 hover:bg-red-200"
+          }`}
+        >
+          Alta
+        </button>
       </div>
 
       {/* Mensajes condicionales */}
@@ -157,7 +172,10 @@ export default function TaskList() {
         <p className="text-white mt-4">No tienes tareas aún.</p>
       )}
       {tasks.length > 0 && filteredTasks.length === 0 && (
-        <p className="text-white mt-4">Aún no tienes tareas que coincidan con el filtro.</p>
+        <p className="text-white mt-4">
+          No hay tareas que coincidan con el filtro seleccionado:{" "}
+          <span className="font-semibold">{filter}</span>
+        </p>
       )}
 
       {/* Lista de tareas */}
@@ -169,10 +187,11 @@ export default function TaskList() {
               deletingTaskId === task.id ? "opacity-0 scale-95" : "opacity-100 scale-100"
             }`}
           >
-            <h3 className="text-lg font-bold text-purple-700">{task.title}</h3>
-            {task.description && (
-              <p className="text-sm text-gray-700">{task.description}</p>
-            )}
+            <h3 className="font-bold text-lg">{task.title}</h3>
+            <p className="text-gray-700 break-words whitespace-pre-wrap max-h-32 overflow-y-auto">
+              {task.description}
+            </p>
+
             <p className="text-sm mt-2 text-gray-800">
               <span className="font-semibold">Urgencia:</span> {task.urgency}
             </p>
@@ -210,9 +229,3 @@ export default function TaskList() {
     </div>
   );
 }
-
-
-
-
-
-

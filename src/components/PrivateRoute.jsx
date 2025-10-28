@@ -6,7 +6,11 @@ export default function PrivateRoute({ children }) {
   const [user, loading] = useAuthState(auth);
 
   if (loading) {
-    return <p className="text-white text-center mt-10">Cargando...</p>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-white text-center">Verificando sesión...</p>
+      </div>
+    );
   }
 
   return user ? children : <Navigate to="/" replace />;

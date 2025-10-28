@@ -8,12 +8,14 @@ import TaskList from "../components/TaskList";
 import WeeklyStats from "../components/WeeklyStats";
 import ProgressPanel from "../components/ProgressPanel";
 import { motion, AnimatePresence } from "framer-motion";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
-export default function Dashboard() {
+function Dashboard() {
   const [showStats, setShowStats] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
   const [showTasks, setShowTasks] = useState(true);
   const [tasks, setTasks] = useState([]);
-  const [loadingTasks, setLoadingTasks] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,7 +34,6 @@ export default function Dashboard() {
       const unsubscribe = onSnapshot(q, (snap) => {
         const tasksData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         setTasks(tasksData);
-        setLoadingTasks(false);
       });
 
       return () => unsubscribe();
@@ -56,90 +57,32 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-blue-500 to-blue-800 flex flex-col md:flex-row p-4 gap-6">
-      
-      {/* 🔴 Botón de cerrar sesión */}
-      <div className="absolute top-4 right-4">
-        <button
-          onClick={handleLogout}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded shadow transition"
-        >
-          Cerrar sesión
-        </button>
-      </div>
+    <div className="relative min-h-screen flex flex-col 
+      bg-gradient-to-br from-blue-500 to-blue-800 
+      dark:from-gray-900 dark:to-gray-800 
+      transition-colors text-white">
 
-      {/* Columna izquierda */}
-      <aside className="md:w-80 w-full space-y-6 text-white">
-        <ProgressPanel
-          tasks={tasks}
-          total={total}
-          completadas={completadas}
-          pendientes={pendientes}
-          progress={progress}
-        />
+      {/* Header */}
+      <Header />
 
-        {/* Botón estadísticas semanales */}
-        <div className="flex justify-center">
-          <button
-            onClick={() => setShowStats(!showStats)}
-            className="px-4 py-2 bg-white text-blue-700 font-semibold rounded shadow hover:bg-blue-100 transition"
-          >
-            {showStats ? "Ocultar estadísticas" : "Ver estadísticas semanales"}
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {showStats && (
-            <motion.div
-              key="weekly-stats"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.4 }}
-            >
-              <WeeklyStats />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </aside>
-
-      {/* Panel central desplazado + animado */}
-      <main className="flex-1 flex flex-col items-center justify-start mt-6 md:mt-0 space-y-6 ml-16">
-        <div className="w-full max-w-md space-y-6">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="flex justify-center"
-          >
-            <img
-              src="/logo.png"
-              alt="TaskGo"
-              className="h-14 w-auto drop-shadow-md"
-            />
-          </motion.div>
-
-          {/* Animación para el formulario */}
+      {/* Contenedor principal */}
+      <div className="flex flex-col md:flex-row justify-center gap-8 flex-1 p-6">
+        {/* Columna izquierda: Crear tarea */}
+        <div className="md:w-[400px] w-full">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <CreateTask />
+            {/* 🔹 Mantiene translucido */}
+            <div className="bg-white/10 dark:bg-gray-800/60 backdrop-blur-md rounded-xl shadow-lg p-6">
+              <CreateTask />
+            </div>
           </motion.div>
+        </div>
 
-          {/* Botón mostrar/ocultar tareas */}
-          <div className="flex justify-center">
-            <button
-              onClick={() => setShowTasks(!showTasks)}
-              className="px-4 py-2 bg-white text-blue-700 font-semibold rounded shadow hover:bg-blue-100 transition"
-            >
-              {showTasks ? "Ocultar tus tareas" : "Mostrar tus tareas"}
-            </button>
-          </div>
-
-          {/* Lista de tareas */}
+        {/* Columna derecha: Lista de tareas */}
+        <div className="md:flex-1 w-full max-w-3xl mx-auto">
           <AnimatePresence>
             {showTasks && (
               <motion.div
@@ -149,12 +92,87 @@ export default function Dashboard() {
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.4 }}
               >
-                <TaskList />
+                {/* 🔹 Mantiene translucido */}
+                <div className="bg-white/10 dark:bg-gray-800/60 backdrop-blur-md rounded-xl shadow-lg p-6">
+                  <TaskList />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-      </main>
+      </div>
+
+      {/* Sección inferior */}
+      <div className="mt-6 px-6">
+        <div className="flex justify-center gap-4">
+          {/* Botón Tu progreso */}
+          <button
+            onClick={() => setShowProgress(!showProgress)}
+            className="px-4 py-2 bg-white/20 dark:bg-gray-700/60 
+            text-white font-semibold rounded shadow 
+            hover:bg-white/30 dark:hover:bg-gray-600 transition"
+          >
+            {showProgress ? "Ocultar progreso" : "Tu progreso"}
+          </button>
+
+          {/* Botón estadísticas */}
+          <button
+            onClick={() => setShowStats(!showStats)}
+            className="px-4 py-2 bg-white/20 dark:bg-gray-700/60 
+            text-white font-semibold rounded shadow 
+            hover:bg-white/30 dark:hover:bg-gray-600 transition"
+          >
+            {showStats ? "Ocultar estadísticas" : "Ver estadísticas semanales"}
+          </button>
+        </div>
+
+        {/* Panel de progreso (🔹 ahora en blanco sólido) */}
+        <AnimatePresence>
+          {showProgress && (
+            <motion.div
+              key="progress-panel"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.4 }}
+              className="mt-4"
+            >
+              <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 text-gray-800 dark:text-gray-100">
+                <ProgressPanel
+                  tasks={tasks}
+                  total={total}
+                  completadas={completadas}
+                  pendientes={pendientes}
+                  progress={progress}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Panel de estadísticas (🔹 mantiene translucido) */}
+        <AnimatePresence>
+          {showStats && (
+            <motion.div
+              key="weekly-stats"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.4 }}
+              className="mt-4"
+            >
+              <div className="bg-white/10 dark:bg-gray-800/60 backdrop-blur-md rounded-xl shadow-lg p-6">
+                <WeeklyStats />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
+
+export default Dashboard;
