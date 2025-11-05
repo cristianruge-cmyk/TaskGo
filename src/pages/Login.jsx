@@ -19,24 +19,40 @@ export default function Login() {
   const navigate = useNavigate();
   const [user, loading] = useAuthState(auth);
 
-  // ✅ Redirigir si ya hay sesión
-  useEffect(() => {
-    if (!loading && user) {
-      navigate("/dashboard");
-    }
-  }, [user, loading, navigate]);
-
+  // ✅ Crear documento de usuario si no existe
   const ensureUserDoc = async (user) => {
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
     if (!snap.exists()) {
       await setDoc(userRef, {
+        userId: user.uid, // 🔑 coherente con reglas Firestore
         name: user.displayName || "",
         email: user.email,
         background: "default"
       });
     }
   };
+
+  // ✅ Capturar resultado de login con redirect
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          await ensureUserDoc(result.user);
+          navigate("/dashboard");
+        }
+      })
+      .catch((error) => {
+        if (error) console.error("Error en redirect:", error.message);
+      });
+  }, [navigate]);
+
+  // ✅ Redirigir si ya hay sesión activa
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -66,19 +82,6 @@ export default function Login() {
       }
     }
   };
-
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result?.user) {
-          await ensureUserDoc(result.user);
-          navigate("/dashboard");
-        }
-      })
-      .catch((error) => {
-        if (error) console.error("Error en redirect:", error.message);
-      });
-  }, [navigate]);
 
   const handleResetPassword = async () => {
     if (!email) {
@@ -169,5 +172,4 @@ export default function Login() {
     </div>
   );
 }
-
 

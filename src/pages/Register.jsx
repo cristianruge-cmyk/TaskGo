@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import taskgoLogo from "../assets/taskgo-logo.png";
 
 export default function Register() {
@@ -15,7 +16,7 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
-    // Validaciones
+    // 🔎 Validaciones básicas
     if (!email.includes("@")) {
       setError("El correo no es válido.");
       return;
@@ -32,7 +33,19 @@ export default function Register() {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      // ✅ Crear usuario en Firebase Auth
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      const user = result.user;
+
+      // ✅ Crear documento en Firestore coherente con tus reglas
+      await setDoc(doc(db, "users", user.uid), {
+        userId: user.uid, // 🔑 campo que tus reglas esperan
+        email: user.email,
+        name: user.displayName || "",
+        background: "default"
+      });
+
+      // ✅ Redirigir al dashboard
       navigate("/dashboard");
     } catch (error) {
       setError(error.message);
