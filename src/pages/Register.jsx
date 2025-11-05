@@ -76,7 +76,9 @@ export default function Register() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm 
+                         focus:outline-none focus:ring-2 focus:ring-purple-500 
+                         text-black bg-white"
               placeholder="usuario@correo.com"
               required
             />
@@ -90,7 +92,9 @@ export default function Register() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm 
+                         focus:outline-none focus:ring-2 focus:ring-purple-500 
+                         text-black bg-white"
               placeholder="********"
               required
             />
@@ -104,7 +108,9 @@ export default function Register() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm 
+                         focus:outline-none focus:ring-2 focus:ring-purple-500 
+                         text-black bg-white"
               placeholder="********"
               required
             />

@@ -25,7 +25,7 @@ export default function Login() {
     const snap = await getDoc(userRef);
     if (!snap.exists()) {
       await setDoc(userRef, {
-        userId: user.uid, // 🔑 coherente con reglas Firestore
+        userId: user.uid,
         name: user.displayName || "",
         email: user.email,
         background: "default"
@@ -114,7 +114,9 @@ export default function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 
+                         text-black bg-white"
               placeholder="usuario@correo.com"
               required
             />
@@ -128,7 +130,9 @@ export default function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full px-3 py-2 border rounded-lg shadow-sm 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 
+                         text-black bg-white"
               placeholder="********"
               required
             />
@@ -172,4 +176,3 @@ export default function Login() {
     </div>
   );
 }
-
