@@ -10,7 +10,7 @@ function Header() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      navigate("/login");
+      navigate("/"); // 👈 redirige al login (ruta "/")
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }

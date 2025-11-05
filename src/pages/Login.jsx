@@ -10,14 +10,22 @@ import {
   sendPasswordResetEmail
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 import taskgoLogo from "../assets/taskgo-logo.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [user, loading] = useAuthState(auth);
 
-  // ✅ Crear documento del usuario si no existe
+  // ✅ Redirigir si ya hay sesión
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
   const ensureUserDoc = async (user) => {
     const userRef = doc(db, "users", user.uid);
     const snap = await getDoc(userRef);
@@ -30,7 +38,6 @@ export default function Login() {
     }
   };
 
-  // 🔐 Login con correo y contraseña
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -42,7 +49,6 @@ export default function Login() {
     }
   };
 
-  // 🔐 Login con Google (Popup con fallback a Redirect)
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
@@ -61,7 +67,6 @@ export default function Login() {
     }
   };
 
-  // 🔄 Manejar resultado de Redirect
   useEffect(() => {
     getRedirectResult(auth)
       .then(async (result) => {
@@ -75,7 +80,6 @@ export default function Login() {
       });
   }, [navigate]);
 
-  // 🔐 Recuperar contraseña
   const handleResetPassword = async () => {
     if (!email) {
       alert("Por favor ingresa tu correo para recuperar la contraseña");
@@ -141,14 +145,6 @@ export default function Login() {
             onClick={handleGoogleLogin}
             className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm transition"
           >
-            <svg
-              className="w-5 h-5"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 488 512"
-              fill="currentColor"
-            >
-              <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 122.6 24.5 165.1 64.9l-67 64.9C322.5 100.3 288.9 88 248 88c-86.1 0-156 71.9-156 168s69.9 168 156 168c74.5 0 122.1-42.5 127.6-101.5H248v-81.3h240c2.3 13.2 3.4 27.1 3.4 42.6z"/>
-            </svg>
             Continuar con Google
           </button>
         </div>
@@ -173,3 +169,5 @@ export default function Login() {
     </div>
   );
 }
+
+

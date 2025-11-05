@@ -11,7 +11,6 @@ import { ThemeProvider } from "./context/ThemeContext";
 function App() {
   return (
     <ThemeProvider>
-      {/* Contenedor global con soporte para tema claro/oscuro */}
       <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
         <Router>
           <Routes>
@@ -47,7 +46,6 @@ function App() {
           </Routes>
         </Router>
 
-        {/* Toaster para notificaciones visuales (global) */}
         <Toaster position="top-right" reverseOrder={false} />
       </div>
     </ThemeProvider>
